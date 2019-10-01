@@ -17,7 +17,7 @@ class Client {
     clientId,
     clientScopes,
     clientSecret
-  }) {
+  } = {}) {
     this.payload = payload || {};
     this.auth = auth || {};
 

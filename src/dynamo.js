@@ -6,7 +6,7 @@ const AWS = require("aws-sdk"),
 exports.default = class Dynamo {
   constructor({
     tableName
-  }) {
+  } = {}) {
     this.tableName = tableName || process.env.TABLE_NAME
   }
 

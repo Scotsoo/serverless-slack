@@ -13,7 +13,7 @@ class Slack extends EventEmitter {
     clientId,
     clientSecret,
     tableName
-  }) {
+  } = {}) {
     super();
 
     this.ignoreBots = true; // ignore other bot message
@@ -37,7 +37,7 @@ class Slack extends EventEmitter {
    * @param {Object} context - The Lambda context
    * @param {Function} callback - The Lambda callback
    */
-  handler(event, context, callback) {     
+  handler(event, context, callback) {
     switch(event.method) {
       case "GET": this.oauth(event, context, callback); break;
       case "POST": this.event(event, context, callback); break;
@@ -153,4 +153,4 @@ class Slack extends EventEmitter {
 
 }
 
-module.exports = new Slack();
+module.exports = Slack
