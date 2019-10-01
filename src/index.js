@@ -1,15 +1,32 @@
 'use strict';
 
 const Client = require('./client'),
+      Dynamo = require('./dynamo'),
       EventEmitter = require('events');
 
 
 class Slack extends EventEmitter {
-  
-  constructor(options) {
+
+  constructor({
+    verificationToken,
+    installRedirect,
+    clientId,
+    clientSecret,
+    tableName
+  }) {
     super();
-    this.store = require('./dynamo'); // default
+
     this.ignoreBots = true; // ignore other bot message
+
+    this.verificationToken = verificationToken || process.env.VERIFICATION_TOKEN
+    this.installRedirect = installRedirect || process.env.INSTALL_REDIRECT
+    this.clientId = clientId || process.env.CLIENT_ID
+    this.clientSecret = clientSecret || process.env.CLIENT_SECRET
+    this.tableName = tableName || process.env.TABLE_NAME
+
+    this.store = new Dynamo({
+      tableName: this.tableName
+    })
   }
 
 
@@ -36,10 +53,13 @@ class Slack extends EventEmitter {
    * @param {Function} callback - The Lambda callback
    */
   oauth(event, context, callback) {
-    let client = new Client();
+    let client = new Client(null, null, {
+      clientId: this.clientId,
+      clientScopes: this.clientScopes,
+      clientSecret: this.clientSecret
+    });
     let payload = event.query;
-    let save = this.store.save.bind(this.store);
-    let redirectUrl = `${process.env.INSTALL_REDIRECT}?state=${payload.state}`;
+    let redirectUrl = `${this.installRedirect}?state=${payload.state}`;
 
     let fail = error => {
       this.emit('*', error, payload);
@@ -55,8 +75,8 @@ class Slack extends EventEmitter {
 
     if (payload.code) {
       // install app
-      client.install(payload).then(save).then(success).catch(fail);
-    } else { 
+      client.install(payload).then(this.store.save).then(success).catch(fail);
+    } else {
       // sends a 301 redirect
       callback(client.getAuthUrl(payload));
     }
@@ -73,7 +93,7 @@ class Slack extends EventEmitter {
   event(event, context, callback) {
     let payload = event.body;
     let id = payload.team_id;
-    let token = process.env.VERIFICATION_TOKEN;
+    let token = this.verificationToken;
 
     // Interactive Messages
     if (payload.payload) {
@@ -106,7 +126,11 @@ class Slack extends EventEmitter {
    */
   notify(payload, auth) {
     let events = ['*'];
-    let bot = new Client(auth, payload);
+    let bot = new Client(auth, payload, {
+      clientId: this.clientId,
+      clientScopes: this.clientScopes,
+      clientSecret: this.clientSecret
+    });
 
     // notify incoming message by type
     if (payload.type) events.push(payload.type);

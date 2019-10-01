@@ -11,20 +11,28 @@ class Client {
    *
    * @param {object} auth - The team's oauth info
    * @param {object} payload - The message payload to use for context
+   * @param {object} args - The arguments to pass to slack api
    */
-  constructor(auth, payload) {
+  constructor(auth, payload, {
+    clientId,
+    clientScopes,
+    clientSecret
+  }) {
     this.payload = payload || {};
     this.auth = auth || {};
 
     this.api = axios.create({
       baseURL: 'https://slack.com/api'
     });
+    this.clientId = clientId
+    this.clientScopes = clientScopes
+    this.clientSecret = clientSecret
   }
 
 
   /**
    * Response Url
-   * 
+   *
    * @return {String} the payload's response url
    */
   get response_url() {
@@ -158,8 +166,8 @@ class Client {
    */
   getAuthUrl(args) {
     args = Object.assign({}, args, {
-      scope: process.env.CLIENT_SCOPES,
-      client_id: process.env.CLIENT_ID
+      scope: this.clientScopes,
+      client_id: this.clientId
     });
 
     // sends a 301 redirect
@@ -177,8 +185,8 @@ class Client {
     return this.send('oauth.access', { 
       code: args.code,
       state: args.state, 
-      client_id: process.env.CLIENT_ID, 
-      client_secret: process.env.CLIENT_SECRET 
+      client_id: this.clientId,
+      client_secret: this.clientSecret
     });
   }
 
