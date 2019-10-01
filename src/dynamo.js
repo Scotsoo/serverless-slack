@@ -3,7 +3,7 @@
 const AWS = require("aws-sdk"),
       dynamo = new AWS.DynamoDB.DocumentClient();
 
-exports.default = class Dynamo {
+class Dynamo {
   constructor({
     tableName
   } = {}) {
@@ -50,3 +50,4 @@ exports.default = class Dynamo {
     });
   }
 }
+module.exports = Dynamo
